@@ -1,4 +1,4 @@
-package com.maobing.zk.naming;
+package com.maobing.zk.namingservice;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
