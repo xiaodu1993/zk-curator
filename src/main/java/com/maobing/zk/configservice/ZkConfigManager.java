@@ -15,6 +15,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.zookeeper.data.Stat;
 
 /**
  * @author maobing.dmb
@@ -95,7 +96,9 @@ public class ZkConfigManager implements ConfigManager{
 
     public void add(String key, String val) {
         try {
-            client.create().forPath(concatKey(key), val.getBytes());
+            if(!nodeExists(key)) {
+                client.create().creatingParentContainersIfNeeded().forPath(concatKey(key), val.getBytes());
+            }
         } catch (Exception e) {
             System.out.print("add key exception, key: " + key + " val: " + val);
         }
@@ -103,7 +106,7 @@ public class ZkConfigManager implements ConfigManager{
 
     public void delete(String key) {
         try {
-            client.delete().forPath(concatKey(key));
+            client.delete().deletingChildrenIfNeeded().forPath(concatKey(key));
         } catch (Exception e) {
             System.out.print("add key exception, key: " + key);
         }
@@ -137,7 +140,21 @@ public class ZkConfigManager implements ConfigManager{
     }
 
     public Map<String, String> getAll() {
-        return cache;
+        Lock lk = lock.readLock();
+        waiting(lk);
+        Map ret = cache;
+        lk.unlock();
+        return ret;
+    }
+
+    private boolean nodeExists(String key) {
+        try {
+            Stat stat = client.checkExists().forPath(concatKey(key));
+            return stat != null;
+        } catch (Exception e) {
+            System.out.println("key already do not exists");
+            return false;
+        }
     }
 
 }

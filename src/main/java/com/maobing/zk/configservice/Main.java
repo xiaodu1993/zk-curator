@@ -12,6 +12,7 @@ public class Main {
 
     public static void main(String[] args) {
         ZkConfigManager manager = new ZkConfigManager("localhost:2181", "/config");
+        manager.add("test10", "6");
         int i = 1;
         while (i < 300) {
             Map map = manager.getAll();
